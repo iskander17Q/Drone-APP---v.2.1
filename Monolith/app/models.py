@@ -27,7 +27,7 @@ class Imagery(TimestampMixin, db.Model):
     gps_lat = db.Column(db.Float)
     gps_lon = db.Column(db.Float)
     status = db.Column(db.String(32), default="uploaded", nullable=False)
-    metadata = db.Column(db.JSON, default=dict)
+    metadata_json = db.Column(db.JSON, default=dict)
 
     analysis_runs = db.relationship(
         "AnalysisRun",

@@ -2,7 +2,6 @@ from flask import Blueprint, jsonify, request
 
 from ..models import Report
 from ..schemas import ReportSchema
-from ...tasks.report import generate_report_task
 
 bp = Blueprint("reports", __name__)
 report_schema = ReportSchema()
@@ -27,6 +26,8 @@ def create_report():
     run_id = payload.get("analysis_run_id")
     if not run_id:
         return jsonify({"error": "analysis_run_id обязателен"}), 400
+
+    from ...tasks.report import generate_report_task  # отложенный импорт
 
     generate_report_task.delay(run_id)
     return jsonify({"status": "queued", "analysis_run_id": run_id}), 202

@@ -3,7 +3,6 @@ from flask import Blueprint, jsonify, request
 from ..models import AnalysisRun, Imagery
 from ..schemas import AnalysisRunSchema
 from ..services import get_analysis_service
-from ...tasks.analysis import run_analysis_task
 
 bp = Blueprint("analysis", __name__)
 analysis_schema = AnalysisRunSchema()
@@ -36,6 +35,8 @@ def create_run():
     imagery = Imagery.query.get_or_404(imagery_id)
     service = get_analysis_service()
     run = service.create_run(imagery, index_type, options)
+
+    from ...tasks.analysis import run_analysis_task  # импорт отложен, чтобы избежать циклов
 
     run_analysis_task.delay(run.id, auto_report)
     return analysis_schema.jsonify(run), 202

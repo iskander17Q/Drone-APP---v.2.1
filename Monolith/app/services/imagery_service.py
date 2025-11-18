@@ -56,7 +56,11 @@ class ImageryService:
             captured_at=self._parse_datetime(metadata.get("captured_at")),
             gps_lat=self._parse_float(metadata.get("gps_lat")) or (gps.get("latitude") if gps else None),
             gps_lon=self._parse_float(metadata.get("gps_lon")) or (gps.get("longitude") if gps else None),
-            metadata={k: v for k, v in metadata.items() if k not in {"gps_lat", "gps_lon", "captured_at"}},
+            metadata_json={
+                k: v
+                for k, v in metadata.items()
+                if k not in {"gps_lat", "gps_lon", "captured_at"}
+            },
         )
 
         self.session.add(imagery)

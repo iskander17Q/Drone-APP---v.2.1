@@ -25,7 +25,7 @@ services:
     build:
       context: ../..
       dockerfile: OLD/monolith/Dockerfile
-    command: celery -A OLD.monolith.celery_app.celery_app worker --loglevel=INFO
+    command: celery -A Monolith.celery_app.celery_app worker --loglevel=INFO
     env_file:
       - env.example
     environment:
@@ -43,7 +43,7 @@ services:
     build:
       context: ../..
       dockerfile: OLD/monolith/Dockerfile
-    command: celery -A OLD.monolith.celery_app.celery_app beat --loglevel=INFO
+    command: celery -A Monolith.celery_app.celery_app beat --loglevel=INFO
     env_file:
       - env.example
     environment:

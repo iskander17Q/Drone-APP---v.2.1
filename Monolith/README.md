@@ -17,7 +17,7 @@ pip install -r requirements.txt
 export FLASK_APP=manage.py
 flask init-db      # создаёт таблицы
 python run.py      # запускает Flask (http://127.0.0.1:5000)
-celery -A OLD.monolith.celery_app.celery_app worker --loglevel=info
+celery -A Monolith.celery_app.celery_app worker --loglevel=info
 ```
 Для отладки можно включить синхронное выполнение задач:
 `export CELERY_TASK_ALWAYS_EAGER=1`.

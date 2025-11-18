@@ -2,8 +2,8 @@ import click
 
 from flask.cli import FlaskGroup, with_appcontext
 
-from OLD.monolith.app import create_app
-from OLD.monolith.app.extensions import db
+from Monolith.app import create_app
+from Monolith.app.extensions import db
 
 
 def create_monolith():
