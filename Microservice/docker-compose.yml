@@ -18,7 +18,7 @@ x-python-service: &python-service
 services:
   api-gateway:
     <<: *python-service
-    command: uvicorn services.api_gateway.app.main:app --host 0.0.0.0 --port ${GATEWAY_PORT:-8080} --reload
+    command: uvicorn services.api_gateway.app.main:app --host 0.0.0.0 --port 8080 --reload
     ports:
       - "${GATEWAY_PORT:-8080}:8080"
     depends_on:
@@ -90,20 +90,17 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   minio-mc:
     image: minio/mc:RELEASE.2024-09-22T00-29-59Z
     depends_on:
       minio:
-        condition: service_healthy
+        condition: service_started
     entrypoint: >
       /bin/sh -c "
-      mc alias set local ${MINIO_ENDPOINT:-http://minio:9000} ${MINIO_ACCESS_KEY:-localminio} ${MINIO_SECRET_KEY:-localminio123};
+      until mc alias set local ${MINIO_ENDPOINT:-http://minio:9000} ${MINIO_ACCESS_KEY:-localminio} ${MINIO_SECRET_KEY:-localminio123}; do
+        sleep 2;
+      done;
       mc mb -p local/${MINIO_BUCKET_IMAGERY:-imagery};
       mc mb -p local/${MINIO_BUCKET_HEATMAPS:-heatmaps};
       mc mb -p local/${MINIO_BUCKET_REPORTS:-reports};

@@ -1,15 +1,8 @@
 from functools import lru_cache
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
-class DatabaseSettings(BaseModel):
-    host: str
-    port: int = 5432
-    name: str
-    user: str
-    password: str
 
 
 class MinioSettings(BaseModel):
@@ -21,13 +14,26 @@ class MinioSettings(BaseModel):
     bucket_heatmaps: str = "heatmaps"
     bucket_reports: str = "reports"
 
+    @property
+    def secure(self) -> bool:
+        return self.endpoint.startswith("https://")
+
+    @property
+    def host(self) -> str:
+        parsed = urlparse(self.endpoint if "://" in self.endpoint else f"http://{self.endpoint}")
+        return parsed.netloc or parsed.path
+
 
 class ServiceSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(".env", "env.example"), extra="ignore")
 
-    service_name: str = Field(default="service")
+    service_name: str = Field(default="service", alias="SERVICE_NAME")
     gateway_port: int = Field(default=8080, alias="GATEWAY_PORT")
+
     redis_url: str = Field(default="redis://redis:6379/0", alias="REDIS_URL")
+    broker_url: str = Field(default="redis://redis:6379/1", alias="BROKER_URL")
+    result_url: str = Field(default="redis://redis:6379/2", alias="RESULT_URL")
+
     imagery_service_url: str = Field(
         default="http://imagery-service:8001", alias="IMAGERY_SERVICE_URL"
     )
@@ -38,40 +44,36 @@ class ServiceSettings(BaseSettings):
         default="http://report-service:8003", alias="REPORT_SERVICE_URL"
     )
 
-    imagery_db: DatabaseSettings = Field(
-        default_factory=lambda: DatabaseSettings(
-            host="postgres-imagery",
-            port=5432,
-            name="imagery_db",
-            user="imagery_user",
-            password="imagery_pass",
-        )
+    minio_endpoint: str = Field(default="http://minio:9000", alias="MINIO_ENDPOINT")
+    minio_access_key: str = Field(default="localminio", alias="MINIO_ACCESS_KEY")
+    minio_secret_key: str = Field(default="localminio123", alias="MINIO_SECRET_KEY")
+    minio_region: str = Field(default="eu-central-1", alias="MINIO_REGION")
+    minio_bucket_imagery: str = Field(
+        default="imagery", alias="MINIO_BUCKET_IMAGERY"
     )
-    analysis_db: DatabaseSettings = Field(
-        default_factory=lambda: DatabaseSettings(
-            host="postgres-analysis",
-            port=5432,
-            name="analysis_db",
-            user="analysis_user",
-            password="analysis_pass",
-        )
+    minio_bucket_heatmaps: str = Field(
+        default="heatmaps", alias="MINIO_BUCKET_HEATMAPS"
     )
-    report_db: DatabaseSettings = Field(
-        default_factory=lambda: DatabaseSettings(
-            host="postgres-report",
-            port=5432,
-            name="report_db",
-            user="report_user",
-            password="report_pass",
-        )
+    minio_bucket_reports: str = Field(
+        default="reports", alias="MINIO_BUCKET_REPORTS"
     )
-    minio: MinioSettings = Field(
-        default_factory=lambda: MinioSettings(
-            endpoint="http://minio:9000",
-            access_key="localminio",
-            secret_key="localminio123",
+
+    @property
+    def minio(self) -> MinioSettings:
+        endpoint = (
+            self.minio_endpoint
+            if "://" in self.minio_endpoint
+            else f"http://{self.minio_endpoint}"
         )
-    )
+        return MinioSettings(
+            endpoint=endpoint,
+            access_key=self.minio_access_key,
+            secret_key=self.minio_secret_key,
+            region=self.minio_region,
+            bucket_imagery=self.minio_bucket_imagery,
+            bucket_heatmaps=self.minio_bucket_heatmaps,
+            bucket_reports=self.minio_bucket_reports,
+        )
 
 
 @lru_cache
