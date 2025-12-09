@@ -18,6 +18,18 @@ from styles import (BUTTON_STYLE, MENU_STYLE, MAIN_WINDOW_STYLE,
 from resources import BUTTON_STYLE, MENU_STYLE, MAIN_WINDOW_STYLE, CROP_THRESHOLDS, TRANSLATIONS, SPECTRAL_INDEX_DESCRIPTIONS
 from image_processing import load_image, compute_indices, generate_heatmap, classify_index
 
+# Инициализация интеграции дизайн-паттернов (неинвазивно).
+# Если по какой-то причине пакет `patterns` недоступен — пропускаем,
+# чтобы не ломать MVP. Внутри `patterns` реализованы и зарегистрированы
+# Singleton, Factory, Builder, Adapter, Decorator, Facade, Strategy,
+# Observer и Command; они используются для оркестрации анализа.
+try:
+    from patterns.patterns_integration import initialize_patterns
+
+    __patterns_registry__ = initialize_patterns()
+except Exception as _err:
+    __patterns_registry__ = None
+
 class MainMenu(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
