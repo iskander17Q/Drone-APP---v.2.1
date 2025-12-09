@@ -35,7 +35,12 @@ Examples:
     parser.add_argument(
         '--ui',
         action='store_true',
-        help='Run GUI mode (requires PyQt5)'
+        help='Run GUI mode'
+    )
+    parser.add_argument(
+        '--cli',
+        action='store_true',
+        help='Run CLI mode'
     )
     
     args = parser.parse_args()
@@ -48,13 +53,17 @@ Examples:
             app_main()
         elif args.ui:
             logger.info('Starting GUI mode...')
-            from ui_integration import main as ui_main
-            ui_main()
-        else:
-            # Default: Interactive CLI menu
-            logger.info('Starting interactive CLI menu...')
+            from gui import main as gui_main
+            gui_main()
+        elif args.cli:
+            logger.info('Starting CLI mode...')
             app = DroneAPP()
             app.interactive_menu()
+        else:
+            # Default: GUI mode
+            logger.info('Starting GUI mode (default)...')
+            from gui import main as gui_main
+            gui_main()
             
     except KeyboardInterrupt:
         logger.info('Application interrupted by user')
