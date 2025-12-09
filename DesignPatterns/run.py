@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Drone Image Analysis System - Launcher
-Supports both CLI and GUI modes
+Supports CLI and GUI modes
 """
 import sys
 import argparse
@@ -21,66 +21,47 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python3 run.py                    # Launch GUI (default)
-  python3 run.py --cli              # Launch CLI interface
-  python3 run.py --auto             # Auto demo mode (CLI)
-  python3 run.py --legacy           # Launch legacy PyQt5 UI (if available)
+  python3 run.py                    # Launch interactive CLI (default)
+  python3 run.py --auto             # Auto demo mode
+  python3 run.py --ui               # Launch PyQt5 GUI (requires PyQt5)
         """
     )
     
     parser.add_argument(
-        '--cli',
-        action='store_true',
-        help='Run in CLI mode (interactive menu)'
-    )
-    parser.add_argument(
         '--auto',
         action='store_true',
-        help='Run auto-demo mode (CLI)'
-    )
-    parser.add_argument(
-        '--legacy',
-        action='store_true',
-        help='Run legacy PyQt5 UI (original main.py)'
+        help='Run auto-demo mode'
     )
     parser.add_argument(
         '--ui',
         action='store_true',
-        default=True,
-        help='Run GUI mode (default)'
+        help='Run GUI mode (requires PyQt5)'
     )
     
     args = parser.parse_args()
     
-    # Determine which mode to run
-    if args.cli or args.auto:
-        logger.info('Launching in CLI mode...')
-        from application import DroneAPP, main as cli_main
+    try:
+        from application import DroneAPP, main as app_main
+        
         if args.auto:
-            # Auto demo
-            from application import main
-            sys.argv = [sys.argv[0], '--auto']
-            main()
-        else:
-            # Interactive menu
-            cli_main()
-    elif args.legacy:
-        logger.info('Launching legacy PyQt5 UI...')
-        try:
-            from main import DroneApp
-            app = DroneApp()
-            app.show()
-            sys.exit(app.exec_())
-        except Exception as e:
-            logger.error('Failed to launch legacy UI: %s', e)
-            logger.info('Falling back to new UI...')
+            logger.info('Starting auto-demo mode...')
+            app_main()
+        elif args.ui:
+            logger.info('Starting GUI mode...')
             from ui_integration import main as ui_main
             ui_main()
-    else:
-        # Default: new integrated UI
-        logger.info('Launching new integrated UI...')
-        from ui_integration import main as ui_main
-        ui_main()
+        else:
+            # Default: Interactive CLI menu
+            logger.info('Starting interactive CLI menu...')
+            app = DroneAPP()
+            app.interactive_menu()
+            
+    except KeyboardInterrupt:
+        logger.info('Application interrupted by user')
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f'Error: {e}', exc_info=True)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
