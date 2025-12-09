@@ -5,10 +5,11 @@ No external dependencies required except the application module
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox
 import logging
 from pathlib import Path
 import sys
+import threading
 
 # Configure logging
 logging.basicConfig(
@@ -27,234 +28,170 @@ class DroneAnalysisGUI:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("Drone Image Analysis System - Design Patterns")
-        self.root.geometry("900x700")
-        self.root.resizable(True, True)
+        self.root.title("🚁 Drone Image Analysis System")
+        self.root.geometry("1000x750")
+        self.root.minsize(800, 600)
         
         # Initialize application backend
         self.app = DroneAPP()
         
-        # Configure styles
-        self.configure_styles()
+        # Configure window
+        self.root.configure(bg='#f0f0f0')
         
         # Create widgets
         self.create_widgets()
         
-        # Set window icon and position
-        self.root.update_idletasks()
-        self.center_window()
-        
         logger.info("GUI initialized successfully")
-    
-    def configure_styles(self):
-        """Configure ttk styles"""
-        style = ttk.Style()
-        style.theme_use('clam')
-        
-        # Define colors
-        bg_color = '#f0f0f0'
-        fg_color = '#333333'
-        accent_color = '#2E7D32'
-        button_color = '#4CAF50'
-        
-        # Configure main style
-        style.configure('TFrame', background=bg_color)
-        style.configure('TLabel', background=bg_color, foreground=fg_color, font=('Arial', 10))
-        style.configure('Title.TLabel', background=bg_color, foreground=accent_color, font=('Arial', 18, 'bold'))
-        style.configure('Subtitle.TLabel', background=bg_color, foreground=fg_color, font=('Arial', 12, 'bold'))
-        style.configure('TButton', font=('Arial', 10))
-        
-        # Configure button style
-        style.map('TButton',
-                  foreground=[('pressed', '#ffffff'), ('active', '#ffffff')],
-                  background=[('pressed', '#2E7D32'), ('active', button_color)])
-        
-        self.root.configure(bg=bg_color)
-    
-    def center_window(self):
-        """Center window on screen"""
-        self.root.update_idletasks()
-        width = self.root.winfo_width()
-        height = self.root.winfo_height()
-        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.root.winfo_screenheight() // 2) - (height // 2)
-        self.root.geometry(f'{width}x{height}+{x}+{y}')
     
     def create_widgets(self):
         """Create main GUI widgets"""
-        # Main frame
-        main_frame = ttk.Frame(self.root, padding="20")
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        # Top frame - Title
+        top_frame = tk.Frame(self.root, bg='#2E7D32', height=60)
+        top_frame.pack(fill=tk.X, side=tk.TOP)
+        top_frame.pack_propagate(False)
         
-        # Title
-        title = ttk.Label(main_frame, text="🚁 Drone Image Analysis", style='Title.TLabel')
-        title.pack(pady=(0, 5))
+        title = tk.Label(top_frame, text="🚁 Drone Image Analysis System", 
+                        bg='#2E7D32', fg='white', font=('Arial', 18, 'bold'))
+        title.pack(pady=10)
         
-        subtitle = ttk.Label(main_frame, text="Система анализа аэрофотоснимков с паттернами проектирования",
-                            style='Subtitle.TLabel')
-        subtitle.pack(pady=(0, 20))
+        # Main content frame
+        main_frame = tk.Frame(self.root, bg='#f0f0f0')
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
         
-        # Info frame
-        info_frame = ttk.LabelFrame(main_frame, text="ℹ️ Информация о системе", padding="15")
-        info_frame.pack(fill=tk.X, pady=(0, 15))
+        # Left side - Settings
+        left_frame = tk.Frame(main_frame, bg='#ffffff', relief=tk.RAISED, bd=1)
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=(0, 10))
         
-        info_text = (
-            "Система демонстрирует 9 паттернов проектирования:\n"
-            "• Singleton - управление конфигурацией\n"
-            "• Factory - создание объектов дронов\n"
-            "• Builder - построение сложных объектов\n"
-            "• Adapter - адаптация интерфейсов\n"
-            "• Decorator - расширение функциональности\n"
-            "• Facade - упрощение сложной системы\n"
-            "• Strategy - выбор алгоритма в runtime\n"
-            "• Observer - систем событий\n"
-            "• Command - инкапсуляция операций"
-        )
-        info_label = ttk.Label(info_frame, text=info_text, justify=tk.LEFT)
-        info_label.pack(anchor=tk.W)
-        
-        # Configuration frame
-        config_frame = ttk.LabelFrame(main_frame, text="⚙️ Конфигурация анализа", padding="15")
-        config_frame.pack(fill=tk.X, pady=(0, 15))
+        settings_title = tk.Label(left_frame, text="⚙️ Параметры", 
+                                 bg='#ffffff', fg='#2E7D32', font=('Arial', 12, 'bold'))
+        settings_title.pack(pady=10, padx=10)
         
         # Drone type selection
-        drone_frame = ttk.Frame(config_frame)
-        drone_frame.pack(fill=tk.X, pady=(0, 10))
-        
-        ttk.Label(drone_frame, text="Тип дрона:").pack(side=tk.LEFT, padx=(0, 10))
+        tk.Label(left_frame, text="Тип дрона:", bg='#ffffff', font=('Arial', 10)).pack(anchor=tk.W, padx=15, pady=(10, 5))
         self.drone_var = tk.StringVar(value="phantom")
-        drone_combo = ttk.Combobox(drone_frame, textvariable=self.drone_var,
-                                   values=["phantom", "mavic", "air"],
-                                   state='readonly', width=20)
-        drone_combo.pack(side=tk.LEFT)
+        drone_frame = tk.Frame(left_frame, bg='#ffffff')
+        drone_frame.pack(fill=tk.X, padx=15, pady=(0, 10))
         
-        # Image count selection
-        image_frame = ttk.Frame(config_frame)
-        image_frame.pack(fill=tk.X, pady=(0, 10))
+        for drone in ["phantom", "mavic", "air"]:
+            tk.Radiobutton(drone_frame, text=drone.capitalize(), variable=self.drone_var, 
+                          value=drone, bg='#ffffff', font=('Arial', 10)).pack(anchor=tk.W)
         
-        ttk.Label(image_frame, text="Количество изображений:").pack(side=tk.LEFT, padx=(0, 10))
-        self.image_var = tk.IntVar(value=5)
-        image_spin = ttk.Spinbox(image_frame, from_=1, to=100, textvariable=self.image_var, width=20)
-        image_spin.pack(side=tk.LEFT)
+        # Image count
+        tk.Label(left_frame, text="Количество изображений:", bg='#ffffff', font=('Arial', 10)).pack(anchor=tk.W, padx=15, pady=(10, 5))
+        frame = tk.Frame(left_frame, bg='#ffffff')
+        frame.pack(fill=tk.X, padx=15, pady=(0, 10))
+        tk.Label(frame, text="1", bg='#ffffff').pack(side=tk.LEFT)
+        self.image_scale = tk.Scale(frame, from_=1, to=100, orient=tk.HORIZONTAL, bg='#ffffff', 
+                                   length=150, command=lambda x: self.update_image_label())
+        self.image_scale.set(5)
+        self.image_scale.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+        self.image_label = tk.Label(frame, text="5", bg='#ffffff', width=3)
+        self.image_label.pack(side=tk.LEFT)
         
-        # Quality setting
-        quality_frame = ttk.Frame(config_frame)
-        quality_frame.pack(fill=tk.X)
-        
-        ttk.Label(quality_frame, text="Качество обработки:").pack(side=tk.LEFT, padx=(0, 10))
+        # Quality
+        tk.Label(left_frame, text="Качество обработки:", bg='#ffffff', font=('Arial', 10)).pack(anchor=tk.W, padx=15, pady=(10, 5))
         self.quality_var = tk.StringVar(value="high")
-        quality_combo = ttk.Combobox(quality_frame, textvariable=self.quality_var,
-                                     values=["low", "medium", "high"],
-                                     state='readonly', width=20)
-        quality_combo.pack(side=tk.LEFT)
+        quality_frame = tk.Frame(left_frame, bg='#ffffff')
+        quality_frame.pack(fill=tk.X, padx=15, pady=(0, 15))
         
-        # Results frame
-        results_frame = ttk.LabelFrame(main_frame, text="📊 Результаты анализа", padding="15")
-        results_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+        for quality in ["low", "medium", "high"]:
+            tk.Radiobutton(quality_frame, text=quality.capitalize(), variable=self.quality_var, 
+                          value=quality, bg='#ffffff', font=('Arial', 10)).pack(anchor=tk.W)
         
-        # Results text widget
-        self.results_text = tk.Text(results_frame, height=12, width=80, wrap=tk.WORD,
-                                    bg='#ffffff', fg='#333333', font=('Courier', 9))
-        self.results_text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+        # Buttons
+        button_frame = tk.Frame(left_frame, bg='#ffffff')
+        button_frame.pack(fill=tk.X, padx=15, pady=15)
         
-        # Scrollbar
-        scrollbar = ttk.Scrollbar(results_frame, command=self.results_text.yview)
+        tk.Button(button_frame, text="▶ Анализ", command=self.run_analysis,
+                 bg='#4CAF50', fg='white', font=('Arial', 11, 'bold'), width=18).pack(fill=tk.X, pady=5)
+        tk.Button(button_frame, text="⚡ Демо", command=self.run_auto_demo,
+                 bg='#FF9800', fg='white', font=('Arial', 11, 'bold'), width=18).pack(fill=tk.X, pady=5)
+        tk.Button(button_frame, text="🗑 Очистить", command=self.clear_results,
+                 bg='#f44336', fg='white', font=('Arial', 11, 'bold'), width=18).pack(fill=tk.X, pady=5)
+        
+        # Right side - Results
+        right_frame = tk.Frame(main_frame, bg='#ffffff', relief=tk.RAISED, bd=1)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        
+        results_title = tk.Label(right_frame, text="📊 Результаты", 
+                                bg='#ffffff', fg='#2E7D32', font=('Arial', 12, 'bold'))
+        results_title.pack(pady=10, padx=10)
+        
+        # Text widget with scrollbar
+        text_frame = tk.Frame(right_frame, bg='#ffffff')
+        text_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+        
+        scrollbar = tk.Scrollbar(text_frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.results_text['yscrollcommand'] = scrollbar.set
         
-        # Buttons frame
-        buttons_frame = ttk.Frame(main_frame)
-        buttons_frame.pack(fill=tk.X, pady=(0, 0))
+        self.results_text = tk.Text(text_frame, height=20, width=60, wrap=tk.WORD,
+                                   bg='#fafafa', fg='#333333', font=('Courier', 9),
+                                   yscrollcommand=scrollbar.set)
+        self.results_text.pack(fill=tk.BOTH, expand=True)
+        scrollbar.config(command=self.results_text.yview)
         
-        # Run analysis button
-        run_btn = ttk.Button(buttons_frame, text="▶ Запустить анализ",
-                            command=self.run_analysis)
-        run_btn.pack(side=tk.LEFT, padx=(0, 10))
-        
-        # Clear results button
-        clear_btn = ttk.Button(buttons_frame, text="🗑 Очистить результаты",
-                              command=self.clear_results)
-        clear_btn.pack(side=tk.LEFT, padx=(0, 10))
-        
-        # Auto demo button
-        demo_btn = ttk.Button(buttons_frame, text="⚡ Автодемонстрация",
-                             command=self.run_auto_demo)
-        demo_btn.pack(side=tk.LEFT, padx=(0, 10))
-        
-        # Exit button
-        exit_btn = ttk.Button(buttons_frame, text="❌ Выход",
-                             command=self.root.quit)
-        exit_btn.pack(side=tk.LEFT)
-        
-        # Status bar
+        # Bottom status bar
         self.status_var = tk.StringVar(value="Готово к работе")
-        status_bar = ttk.Label(self.root, textvariable=self.status_var,
-                              relief=tk.SUNKEN, anchor=tk.W)
-        status_bar.pack(side=tk.BOTTOM, fill=tk.X, padx=5, pady=5)
+        status_bar = tk.Label(self.root, textvariable=self.status_var,
+                             bg='#e0e0e0', fg='#333333', font=('Arial', 9),
+                             relief=tk.SUNKEN, anchor=tk.W)
+        status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+    
+    def update_image_label(self):
+        """Update image count label"""
+        self.image_label.config(text=str(self.image_scale.get()))
     
     def run_analysis(self):
-        """Run image analysis with selected parameters"""
-        try:
-            self.status_var.set("⏳ Выполняется анализ...")
-            self.root.update()
-            
-            drone_type = self.drone_var.get()
-            image_count = self.image_var.get()
-            
-            logger.info(f"Starting analysis: drone={drone_type}, images={image_count}")
-            
-            # Run analysis
-            result = self.app.run_analysis(drone_type, image_count)
-            
-            # Display results
-            self.display_results(result, drone_type, image_count)
-            
-            self.status_var.set("✅ Анализ завершён успешно")
-            messagebox.showinfo("Успешно", "Анализ завершён!\nСм. результаты ниже.")
-            
-        except Exception as e:
-            logger.error(f"Analysis error: {e}", exc_info=True)
-            self.status_var.set("❌ Ошибка при анализе")
-            messagebox.showerror("Ошибка", f"Ошибка при анализе:\n{str(e)}")
+        """Run image analysis in background thread"""
+        def analyze():
+            try:
+                self.status_var.set("⏳ Выполняется анализ...")
+                self.root.update()
+                
+                drone_type = self.drone_var.get()
+                image_count = self.image_scale.get()
+                
+                logger.info(f"Starting analysis: drone={drone_type}, images={image_count}")
+                
+                result = self.app.run_analysis(drone_type, image_count)
+                self.display_results(result, drone_type, image_count)
+                
+                self.status_var.set("✅ Анализ завершён успешно")
+                messagebox.showinfo("Успешно", "Анализ завершён!")
+                
+            except Exception as e:
+                logger.error(f"Analysis error: {e}", exc_info=True)
+                self.status_var.set("❌ Ошибка при анализе")
+                messagebox.showerror("Ошибка", f"Ошибка: {str(e)}")
+        
+        thread = threading.Thread(target=analyze, daemon=True)
+        thread.start()
     
     def display_results(self, result, drone_type, image_count):
-        """Display analysis results in text widget"""
+        """Display analysis results"""
         self.results_text.config(state=tk.NORMAL)
-        self.results_text.insert(tk.END, "=" * 80 + "\n")
+        self.results_text.insert(tk.END, "=" * 60 + "\n")
         self.results_text.insert(tk.END, "📋 РЕЗУЛЬТАТЫ АНАЛИЗА\n")
-        self.results_text.insert(tk.END, "=" * 80 + "\n\n")
+        self.results_text.insert(tk.END, "=" * 60 + "\n\n")
         
-        # Drone info
-        self.results_text.insert(tk.END, "🚁 ИНФОРМАЦИЯ О ДРОНЕ:\n")
-        self.results_text.insert(tk.END, "-" * 40 + "\n")
         if 'drone' in result:
             drone_info = result['drone']
-            self.results_text.insert(tk.END, f"  Модель: {drone_info.get('model', 'Unknown')}\n")
-            self.results_text.insert(tk.END, f"  Сенсоры: {', '.join(drone_info.get('sensors', []))}\n")
+            self.results_text.insert(tk.END, f"🚁 Модель: {drone_info.get('model', 'Unknown')}\n")
+            self.results_text.insert(tk.END, f"📡 Сенсоры: {', '.join(drone_info.get('sensors', []))}\n\n")
         
-        # Processing parameters
-        self.results_text.insert(tk.END, "\n⚙️ ПАРАМЕТРЫ ОБРАБОТКИ:\n")
-        self.results_text.insert(tk.END, "-" * 40 + "\n")
-        self.results_text.insert(tk.END, f"  Количество изображений: {image_count}\n")
+        self.results_text.insert(tk.END, f"🖼️ Изображений: {image_count}\n")
         if 'processing_params' in result:
-            params = result['processing_params']
-            for key, value in params.items():
-                self.results_text.insert(tk.END, f"  {key.capitalize()}: {value}\n")
+            for key, value in result['processing_params'].items():
+                self.results_text.insert(tk.END, f"⚙️ {key}: {value}\n")
         
-        # Output format
-        self.results_text.insert(tk.END, "\n📊 ФОРМАТ ВЫВОДА:\n")
-        self.results_text.insert(tk.END, "-" * 40 + "\n")
-        output_format = result.get('output_format', 'Unknown')
-        self.results_text.insert(tk.END, f"  Формат: {output_format}\n")
+        self.results_text.insert(tk.END, f"\n📊 Формат: {result.get('output_format', 'Unknown')}\n")
         
-        # Processed images
-        self.results_text.insert(tk.END, "\n🖼️ ОБРАБОТАННЫЕ ИЗОБРАЖЕНИЯ:\n")
-        self.results_text.insert(tk.END, "-" * 40 + "\n")
         if 'images' in result:
-            for i, image in enumerate(result['images'], 1):
-                self.results_text.insert(tk.END, f"  {i}. {image}\n")
+            self.results_text.insert(tk.END, f"\n📁 Обработанные файлы:\n")
+            for img in result['images']:
+                self.results_text.insert(tk.END, f"  • {img}\n")
         
-        self.results_text.insert(tk.END, "\n" + "=" * 80 + "\n")
+        self.results_text.insert(tk.END, "\n" + "=" * 60 + "\n")
         self.results_text.config(state=tk.DISABLED)
         self.results_text.see(tk.END)
     
@@ -266,51 +203,62 @@ class DroneAnalysisGUI:
         self.status_var.set("Результаты очищены")
     
     def run_auto_demo(self):
-        """Run automatic demonstration with multiple drones"""
-        try:
-            self.clear_results()
-            self.status_var.set("⏳ Выполняется автодемонстрация...")
-            self.root.update()
-            
-            self.results_text.config(state=tk.NORMAL)
-            self.results_text.insert(tk.END, "🎬 АВТОМАТИЧЕСКАЯ ДЕМОНСТРАЦИЯ СИСТЕМЫ\n")
-            self.results_text.insert(tk.END, "=" * 80 + "\n\n")
-            
-            # Test all drone types
-            drone_types = ["phantom", "mavic", "air"]
-            image_counts = [5, 3, 7]
-            
-            for drone_type, image_count in zip(drone_types, image_counts):
-                self.results_text.insert(tk.END, f"\n▶ Анализ для дрона: {drone_type.upper()}\n")
-                self.results_text.insert(tk.END, "-" * 40 + "\n")
-                
-                result = self.app.run_analysis(drone_type, image_count)
-                
-                if 'drone' in result:
-                    drone_info = result['drone']
-                    self.results_text.insert(tk.END, f"  Модель: {drone_info.get('model', 'Unknown')}\n")
-                    self.results_text.insert(tk.END, f"  Сенсоры: {', '.join(drone_info.get('sensors', []))}\n")
-                
-                if 'images' in result:
-                    self.results_text.insert(tk.END, f"  Обработано изображений: {len(result['images'])}\n")
-                
-                self.results_text.insert(tk.END, f"  Формат вывода: {result.get('output_format', 'Unknown')}\n")
-                self.results_text.insert(tk.END, "\n")
-                
+        """Run automatic demo in background thread"""
+        def demo():
+            try:
+                self.clear_results()
+                self.status_var.set("⏳ Автодемонстрация...")
                 self.root.update()
-            
-            self.results_text.insert(tk.END, "\n" + "=" * 80 + "\n")
-            self.results_text.insert(tk.END, "✅ Автодемонстрация завершена!\n")
-            self.results_text.config(state=tk.DISABLED)
-            self.results_text.see(tk.END)
-            
-            self.status_var.set("✅ Автодемонстрация завершена")
-            messagebox.showinfo("Успешно", "Автодемонстрация завершена!")
-            
-        except Exception as e:
-            logger.error(f"Demo error: {e}", exc_info=True)
-            self.status_var.set("❌ Ошибка при демонстрации")
-            messagebox.showerror("Ошибка", f"Ошибка при демонстрации:\n{str(e)}")
+                
+                self.results_text.config(state=tk.NORMAL)
+                self.results_text.insert(tk.END, "🎬 АВТОДЕМОНСТРАЦИЯ СИСТЕМЫ\n")
+                self.results_text.insert(tk.END, "=" * 60 + "\n\n")
+                
+                drone_types = ["phantom", "mavic", "air"]
+                image_counts = [5, 3, 7]
+                
+                for drone_type, image_count in zip(drone_types, image_counts):
+                    self.results_text.insert(tk.END, f"▶ {drone_type.upper()} ({image_count} фото)\n")
+                    self.results_text.insert(tk.END, "-" * 40 + "\n")
+                    
+                    result = self.app.run_analysis(drone_type, image_count)
+                    
+                    if 'drone' in result:
+                        self.results_text.insert(tk.END, f"  Модель: {result['drone'].get('model', 'Unknown')}\n")
+                        self.results_text.insert(tk.END, f"  Сенсоры: {', '.join(result['drone'].get('sensors', []))}\n")
+                    
+                    if 'images' in result:
+                        self.results_text.insert(tk.END, f"  Обработано: {len(result['images'])} файлов\n")
+                    
+                    self.results_text.insert(tk.END, f"  Формат: {result.get('output_format', 'Unknown')}\n\n")
+                    self.root.update()
+                
+                self.results_text.insert(tk.END, "=" * 60 + "\n")
+                self.results_text.insert(tk.END, "✅ Демонстрация завершена!\n")
+                self.results_text.config(state=tk.DISABLED)
+                self.results_text.see(tk.END)
+                
+                self.status_var.set("✅ Демонстрация завершена")
+                messagebox.showinfo("Успешно", "Демонстрация завершена!")
+                
+            except Exception as e:
+                logger.error(f"Demo error: {e}", exc_info=True)
+                self.status_var.set("❌ Ошибка")
+                messagebox.showerror("Ошибка", f"Ошибка: {str(e)}")
+        
+        thread = threading.Thread(target=demo, daemon=True)
+        thread.start()
+
+
+def main():
+    """Main entry point"""
+    root = tk.Tk()
+    gui = DroneAnalysisGUI(root)
+    root.mainloop()
+
+
+if __name__ == '__main__':
+    main()
 
 
 def main():
