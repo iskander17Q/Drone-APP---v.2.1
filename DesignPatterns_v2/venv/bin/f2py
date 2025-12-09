@@ -1,4 +1,6 @@
-#!/Users/iskandereivi/Desktop/Drone-APP/venv/bin/python3.12
+#!/bin/sh
+'''exec' "/Users/iskandereivi/Desktop/Drone APP v2.1/DesignPatterns_v2/venv/bin/python" "$0" "$@"
+' '''
 # -*- coding: utf-8 -*-
 import re
 import sys

@@ -46,22 +46,22 @@ Examples:
     args = parser.parse_args()
     
     try:
-        from application import DroneAPP, main as app_main
-        
         if args.auto:
             logger.info('Starting auto-demo mode...')
+            from application import main as app_main
             app_main()
         elif args.ui:
-            logger.info('Starting GUI mode...')
-            from gui import main as gui_main
-            gui_main()
+            logger.info('Starting GUI mode (PyQt5)...')
+            from ui_integration import main as ui_main
+            ui_main()
         elif args.cli:
             logger.info('Starting CLI mode...')
+            from application import DroneAPP
             app = DroneAPP()
             app.interactive_menu()
         else:
-            # Default: GUI mode
-            logger.info('Starting GUI mode (default)...')
+            # Default: Tkinter GUI mode
+            logger.info('Starting Tkinter GUI mode (default)...')
             from gui import main as gui_main
             gui_main()
             
