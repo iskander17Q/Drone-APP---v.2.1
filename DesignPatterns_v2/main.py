@@ -7,11 +7,6 @@ from PyQt5.QtCore import Qt
 import matplotlib.pyplot as plt
 import datetime
 from PyQt5.QtGui import QIcon, QPixmap
-import logging
-
-# Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 # Импортируем функции анализа из analysis.py
 from analysis import load_image, compute_indices, generate_heatmap, classify_index
@@ -22,20 +17,6 @@ from styles import (BUTTON_STYLE, MENU_STYLE, MAIN_WINDOW_STYLE,
 # Импорт ресурсов и функций
 from resources import BUTTON_STYLE, MENU_STYLE, MAIN_WINDOW_STYLE, CROP_THRESHOLDS, TRANSLATIONS, SPECTRAL_INDEX_DESCRIPTIONS
 from image_processing import load_image, compute_indices, generate_heatmap, classify_index
-
-# Импорт 9 паттернов проектирования
-try:
-    from patterns import (
-        DroneAnalysisApplication, ImageProcessingConfig, DroneFactory,
-        DroneDataBuilder, AnalysisFacade, LoggerAdapter, ProcessingDecorator,
-        ImageSorter, AlphabeticalSort, SystemObserver, Subject, AnalysisCommand,
-        CommandQueue
-    )
-    PATTERNS_AVAILABLE = True
-    logger.info("✅ Design patterns successfully loaded")
-except ImportError as e:
-    PATTERNS_AVAILABLE = False
-    logger.warning(f"⚠️ Design patterns not available: {e}")
 
 class MainMenu(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -82,19 +63,10 @@ class MainMenu(QtWidgets.QWidget):
         self.btn_settings.setToolTip("Настройки анализа и отображения")
         self.btn_about = QtWidgets.QPushButton(TRANSLATIONS["Русский"]["about"])
         self.btn_about.setToolTip("Информация о приложении и инструкции")
-        
-        # Кнопка для демонстрации паттернов
-        if PATTERNS_AVAILABLE:
-            self.btn_patterns = QtWidgets.QPushButton("🎨 Design Patterns Demo")
-            self.btn_patterns.setToolTip("Демонстрация 9 паттернов проектирования")
 
         for btn in [self.btn_start, self.btn_settings, self.btn_about]:
             btn.setStyleSheet(BUTTON_STYLE)
             main_layout.addWidget(btn)
-        
-        if PATTERNS_AVAILABLE:
-            self.btn_patterns.setStyleSheet(BUTTON_STYLE)
-            main_layout.addWidget(self.btn_patterns)
 
         self.setLayout(main_layout)
 
@@ -533,11 +505,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main_menu.btn_start.clicked.connect(self.show_analysis)
         self.main_menu.btn_settings.clicked.connect(self.show_settings)
         self.main_menu.btn_about.clicked.connect(self.show_about)
-        
-        # Подключаем кнопку паттернов если доступна
-        if PATTERNS_AVAILABLE:
-            self.main_menu.btn_patterns.clicked.connect(self.show_patterns_demo)
-        
         # Подключаем сигнал выбора языка
         self.main_menu.lang_combo.currentIndexChanged.connect(self.on_language_combo_changed)
         
@@ -612,15 +579,10 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog = AboutDialog(self)
         dialog.setMinimumSize(800, 600)  # Устанавливаем минимальный размер
         dialog.exec_()
+
     def show_analysis(self):
         self.main_menu.hide()
         self.analysis_window.show()
-    
-    def show_patterns_demo(self):
-        """Show design patterns demonstration dialog"""
-        if PATTERNS_AVAILABLE:
-            dialog = PatternsDialog(self)
-            dialog.exec_()
 
     def export_spectral_maps(self):
         """Сохраняет все доступные спектральные карты в отдельную подпапку с описаниями."""
@@ -688,138 +650,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_language_combo_changed(self, idx):
         lang = self.main_menu.lang_combo.currentText()
         self.change_language(lang)
-
-
-# ============================================================================
-# DESIGN PATTERNS DEMONSTRATION DIALOG
-# ============================================================================
-
-class PatternsDialog(QtWidgets.QDialog):
-    """Dialog demonstrating 9 design patterns"""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Design Patterns Demonstration")
-        self.setGeometry(100, 100, 900, 700)
-        self.setup_ui()
-        self.run_demo()
-    
-    def setup_ui(self):
-        layout = QtWidgets.QVBoxLayout()
-        
-        title = QtWidgets.QLabel("🎨 9 Design Patterns in Drone Analysis System")
-        title.setStyleSheet("font-size: 16px; font-weight: bold; color: #2E7D32;")
-        layout.addWidget(title)
-        
-        self.text_edit = QtWidgets.QTextEdit()
-        self.text_edit.setReadOnly(True)
-        self.text_edit.setFont(QtGui.QFont("Courier", 9))
-        layout.addWidget(self.text_edit)
-        
-        close_btn = QtWidgets.QPushButton("Close")
-        close_btn.clicked.connect(self.accept)
-        layout.addWidget(close_btn)
-        
-        self.setLayout(layout)
-    
-    def log_message(self, msg: str):
-        """Log message to text edit"""
-        self.text_edit.append(msg)
-        QtWidgets.QApplication.processEvents()
-    
-    def run_demo(self):
-        """Run demonstration"""
-        try:
-            if not PATTERNS_AVAILABLE:
-                self.log_message("❌ Design patterns module not available")
-                return
-            
-            app = DroneAnalysisApplication()
-            
-            self.log_message("=" * 80)
-            self.log_message("DRONE IMAGE ANALYSIS - 9 DESIGN PATTERNS DEMO")
-            self.log_message("=" * 80)
-            self.log_message("")
-            
-            # Demonstrate each pattern
-            self.log_message("1️⃣  SINGLETON - ImageProcessingConfig")
-            self.log_message("   Creates single instance for application config")
-            config = ImageProcessingConfig()
-            self.log_message(f"   Config: {config.get_all()}")
-            self.log_message("")
-            
-            self.log_message("2️⃣  FACTORY - DroneFactory")
-            self.log_message("   Creates different drone types")
-            for drone_type in ['phantom', 'mavic', 'air']:
-                drone = DroneFactory.create_drone(drone_type)
-                self.log_message(f"   ✓ {drone.get_specs()['model']}")
-            self.log_message("")
-            
-            self.log_message("3️⃣  BUILDER - DroneDataBuilder")
-            self.log_message("   Constructs complex data objects step by step")
-            drone = DroneFactory.create_drone('phantom')
-            builder = DroneDataBuilder()
-            data = (builder.set_drone_info(drone)
-                          .set_flight_params(100, 15, 30)
-                          .set_image_metadata(5, (4096, 3072), 30)
-                          .build())
-            self.log_message(f"   ✓ Built data with {len(data)} components")
-            self.log_message("")
-            
-            self.log_message("4️⃣  ADAPTER - LoggerAdapter")
-            self.log_message("   Adapts legacy logging to new system")
-            self.log_message("   ✓ Legacy system adapted successfully")
-            self.log_message("")
-            
-            self.log_message("5️⃣  DECORATOR - ProcessingDecorator")
-            self.log_message("   Adds metadata to messages")
-            from patterns import Message
-            msg = Message("Processing image data")
-            from patterns import ProcessingDecorator as PD
-            decorated = PD(msg)
-            self.log_message(f"   ✓ {decorated.get()}")
-            self.log_message("")
-            
-            self.log_message("6️⃣  FACADE - AnalysisFacade")
-            self.log_message("   Simplifies complex subsystems")
-            facade = AnalysisFacade()
-            result = facade.perform_full_analysis({}, (0, 0))
-            self.log_message(f"   ✓ Analysis complete with {len(result)} components")
-            self.log_message("")
-            
-            self.log_message("7️⃣  STRATEGY - ImageSorter")
-            self.log_message("   Selects sorting algorithm at runtime")
-            sorter = ImageSorter(AlphabeticalSort())
-            images = ['img3.jpg', 'img1.jpg', 'img2.jpg']
-            sorted_imgs = sorter.sort_images(images)
-            self.log_message(f"   ✓ Sorted: {sorted_imgs}")
-            self.log_message("")
-            
-            self.log_message("8️⃣  OBSERVER - SystemObserver")
-            self.log_message("   Monitors system events")
-            subject = Subject()
-            subject.attach(SystemObserver())
-            subject.notify("demo_event", {"data": "test"})
-            self.log_message("   ✓ Event notified to observers")
-            self.log_message("")
-            
-            self.log_message("9️⃣  COMMAND - CommandQueue")
-            self.log_message("   Encapsulates operations as objects")
-            queue = CommandQueue()
-            cmd = AnalysisCommand(facade, {})
-            queue.execute(cmd)
-            self.log_message("   ✓ Command executed and queued")
-            self.log_message("")
-            
-            self.log_message("=" * 80)
-            self.log_message("✅ ALL 9 PATTERNS DEMONSTRATED SUCCESSFULLY!")
-            self.log_message("=" * 80)
-            
-        except Exception as e:
-            self.log_message(f"❌ Error: {e}")
-            import traceback
-            self.log_message(traceback.format_exc())
-
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
