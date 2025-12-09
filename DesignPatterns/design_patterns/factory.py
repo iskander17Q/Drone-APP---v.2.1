@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class Animal:
     def speak(self):
         raise NotImplementedError
@@ -23,11 +28,12 @@ class AnimalFactory:
         raise ValueError('Unknown animal')
 
 
-def main():
+def run():
     for t in ['dog', 'cat']:
         a = AnimalFactory.create(t)
-        print(t, '->', a.speak())
+        logger.info('%s -> %s', t, a.speak())
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    run()

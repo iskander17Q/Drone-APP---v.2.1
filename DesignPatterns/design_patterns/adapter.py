@@ -1,6 +1,11 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class OldLogger:
     def write(self, message):
-        print('OLD LOG:', message)
+        logger.info('OLD LOG: %s', message)
 
 
 class LoggerAdapter:
@@ -11,11 +16,12 @@ class LoggerAdapter:
         self.old.write(msg)
 
 
-def main():
+def run():
     old = OldLogger()
     adapted = LoggerAdapter(old)
-    adapted.log('Adapter pattern in action')
+    adapted.log('adapter run')
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    run()

@@ -1,14 +1,19 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class Light:
     def __init__(self):
         self.on = False
 
     def switch_on(self):
         self.on = True
-        print('Light: ON')
+        logger.info('Light: ON')
 
     def switch_off(self):
         self.on = False
-        print('Light: OFF')
+        logger.info('Light: OFF')
 
 
 class Command:
@@ -41,7 +46,7 @@ class Switch:
         cmd.execute()
 
 
-def main():
+def run():
     light = Light()
     switch = Switch()
     switch.store_and_execute(SwitchOnCommand(light))
@@ -49,4 +54,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    run()

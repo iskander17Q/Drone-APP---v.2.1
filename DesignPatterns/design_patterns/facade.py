@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class SubsystemA:
     def operation(self):
         return 'A'
@@ -17,10 +22,11 @@ class Facade:
         return f'Facade: {self.a.operation()} + {self.b.operation()}'
 
 
-def main():
+def run():
     f = Facade()
-    print(f.do_work())
+    logger.info('%s', f.do_work())
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    run()

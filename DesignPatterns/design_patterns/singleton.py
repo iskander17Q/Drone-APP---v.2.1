@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class Singleton:
     _instance = None
 
@@ -8,13 +13,14 @@ class Singleton:
         return cls._instance
 
 
-def main():
+def run():
     a = Singleton(value=10)
     b = Singleton(value=20)
-    print('a.value', a.value)
-    print('b.value', b.value)
-    print('a is b ->', a is b)
+    logger.info('a.value %s', a.value)
+    logger.info('b.value %s', b.value)
+    logger.info('a is b -> %s', a is b)
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    run()

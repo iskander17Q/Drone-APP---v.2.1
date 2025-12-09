@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class Subject:
     def __init__(self):
         self._observers = []
@@ -12,14 +17,15 @@ class Subject:
 
 class PrintObserver:
     def update(self, msg):
-        print('Observer got:', msg)
+        logger.info('Observer received: %s', msg)
 
 
-def main():
+def run():
     s = Subject()
     s.attach(PrintObserver())
-    s.notify('Event happened')
+    s.notify('event')
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    run()

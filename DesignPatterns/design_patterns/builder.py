@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class Car:
     def __init__(self):
         self.engine = None
@@ -23,10 +28,11 @@ class CarBuilder:
         return self.car
 
 
-def main():
+def run():
     car = CarBuilder().add_engine('V8').add_wheels(4).build()
-    print(car)
+    logger.info('%s', car)
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    run()

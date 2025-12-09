@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 def make_bold(fn):
     def wrapper(*args, **kwargs):
         return '<b>' + fn(*args, **kwargs) + '</b>'
@@ -9,9 +14,11 @@ def greet(name):
     return f'Hello, {name}'
 
 
-def main():
-    print(greet('World'))
+def run():
+    result = greet('World')
+    logger.info('%s', result)
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    run()

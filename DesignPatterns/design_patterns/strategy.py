@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class Strategy:
     def sort(self, data):
         raise NotImplementedError
@@ -5,7 +10,6 @@ class Strategy:
 
 class BubbleSort(Strategy):
     def sort(self, data):
-        # naive bubble for demo
         arr = list(data)
         n = len(arr)
         for i in range(n):
@@ -28,11 +32,12 @@ class Sorter:
         return self.strategy.sort(data)
 
 
-def main():
-    data = [5,3,1,4,2]
-    print('bubble ->', Sorter(BubbleSort()).perform(data))
-    print('py sort ->', Sorter(PythonSort()).perform(data))
+def run():
+    data = [5, 3, 1, 4, 2]
+    logger.info('bubble -> %s', Sorter(BubbleSort()).perform(data))
+    logger.info('py sort -> %s', Sorter(PythonSort()).perform(data))
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    run()
