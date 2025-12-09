@@ -1,52 +1,97 @@
-# Design Patterns
+# Drone Image Analysis System - Design Patterns Application
 
-Полная реализация девяти паттернов проектирования, организованная по категориям: Creational, Structural, Behavioral.
+Полнофункциональное приложение для анализа изображений с дрона, демонстрирующее все 9 паттернов проектирования в едином интегрированном решении.
 
-## Структура
+## Что это?
 
-```
-patterns/
-├── creational/          # Паттерны создания объектов
-│   ├── singleton.py     # Одиночка
-│   ├── factory.py       # Фабрика
-│   └── builder.py       # Строитель
-├── structural/          # Структурные паттерны
-│   ├── adapter.py       # Адаптер
-│   ├── decorator.py     # Декоратор
-│   └── facade.py        # Фасад
-└── behavioral/          # Поведенческие паттерны
-    ├── strategy.py      # Стратегия
-    ├── observer.py      # Наблюдатель
-    └── command.py       # Команда
+Это рабочее приложение, а не набор отдельных примеров. Все 9 паттернов работают вместе в единой системе анализа данных дрона:
 
-tests/                   # Тесты для всех паттернов
-docs/                    # Документация
-└── README.md           # Этот файл
-```
+- **Creational**: Singleton (конфигурация), Factory (создание дронов), Builder (конструирование наборов данных)
+- **Structural**: Adapter (интеграция логгеров), Decorator (добавление функциональности), Facade (упрощение взаимодействия)
+- **Behavioral**: Strategy (выбор алгоритма сортировки), Observer (мониторинг событий), Command (управление операциями)
 
-## Использование
+## Быстрый старт
 
-### Импорт паттернов
-
-```python
-# Creational Patterns
-from patterns.creational import Singleton, AnimalFactory, CarBuilder
-
-# Structural Patterns
-from patterns.structural import LoggerAdapter, make_bold, Facade
-
-# Behavioral Patterns
-from patterns.behavioral import Sorter, BubbleSort, Subject, Light, Switch
-```
-
-### Запуск модуля напрямую
-
-Каждый модуль оснащён функцией `run()` для быстрой проверки:
+### Интерактивный режим
 
 ```bash
-python patterns/creational/singleton.py
-python patterns/structural/facade.py
-python patterns/behavioral/strategy.py
+python application.py
+```
+
+В меню вы можете:
+- Анализировать изображения с разных типов дронов (Phantom, Mavic, Air)
+- Просмотреть конфигурацию системы (Singleton)
+- Видеть события системы в реальном времени (Observer)
+
+### Автоматическая демонстрация
+
+```bash
+python application.py --auto
+```
+
+Система автоматически выполнит анализ с несколькими типами дронов.
+
+## Как работает приложение
+
+Приложение состоит из единого модуля `application.py`, который интегрирует все 9 паттернов:
+
+### Главные компоненты
+
+1. **DroneAPP** — главный класс приложения, орхестрирует все паттерны
+2. **ImageProcessingConfig** (Singleton) — единая конфигурация системы
+3. **DroneFactory** (Factory) — создаёт объекты разных типов дронов
+4. **DroneDataBuilder** (Builder) — конструирует сложные наборы данных
+5. **AnalysisFacade** (Facade) — упрощает взаимодействие с системой анализа
+6. **LoggerAdapter** (Adapter) — адаптирует старую логгер-систему к новой
+7. **ProcessingDecorator** (Decorator) — добавляет метаданные к сообщениям
+8. **SystemObserver** (Observer) — мониторит события системы в реальном времени
+9. **ImageProcessingCommand** (Command) — инкапсулирует операции обработки
+
+### Процесс анализа
+
+```
+DroneAPP (главное приложение)
+    ├── ImageProcessingConfig (Singleton) → единая конфигурация
+    ├── DroneFactory (Factory) → создание дронов
+    ├── DroneDataBuilder (Builder) → построение данных
+    ├── AnalysisFacade (Facade) → упрощение взаимодействия
+    │   ├── LoggerAdapter (Adapter) → адаптация логгеров
+    │   ├── ProcessingDecorator (Decorator) → добавление метаданных
+    │   └── Sorter + Strategy → выбор алгоритма сортировки
+    ├── SystemObserver (Observer) → мониторинг событий
+    └── ImageProcessingCommand (Command) → управление операциями
+```
+
+## Структура проекта
+
+```
+DesignPatterns/
+├── application.py              # Главное приложение - интеграция всех паттернов
+├── patterns/
+│   ├── creational/            # Паттерны создания объектов
+│   │   ├── singleton.py
+│   │   ├── factory.py
+│   │   └── builder.py
+│   ├── structural/            # Структурные паттерны
+│   │   ├── adapter.py
+│   │   ├── decorator.py
+│   │   └── facade.py
+│   └── behavioral/            # Поведенческие паттерны
+│       ├── strategy.py
+│       ├── observer.py
+│       └── command.py
+├── tests/                     # Unit-тесты для каждого паттерна
+│   ├── test_creational.py
+│   ├── test_structural.py
+│   └── test_behavioral.py
+├── docs/                      # Документация
+│   ├── CREATIONAL.md
+│   ├── STRUCTURAL.md
+│   └── BEHAVIORAL.md
+├── README.md                  # Этот файл
+├── setup.py
+├── pyproject.toml
+└── .gitignore
 ```
 
 ## Тестирование
@@ -54,20 +99,20 @@ python patterns/behavioral/strategy.py
 Запуск всех тестов:
 
 ```bash
-python -m pytest tests/
+python -m pytest tests/ -v
 # или
-cd tests && python __init__.py
+cd tests && python -m unittest discover
 ```
 
 Запуск тестов отдельной категории:
 
 ```bash
-python -m pytest tests/test_creational.py
-python -m pytest tests/test_structural.py
-python -m pytest tests/test_behavioral.py
+python -m pytest tests/test_creational.py -v
+python -m pytest tests/test_structural.py -v
+python -m pytest tests/test_behavioral.py -v
 ```
 
-## Документация
+## Документация паттернов
 
 Подробное описание каждого паттерна находится в папке `docs/`:
 
@@ -75,27 +120,65 @@ python -m pytest tests/test_behavioral.py
 - [Structural Patterns](docs/STRUCTURAL.md) — Adapter, Decorator, Facade
 - [Behavioral Patterns](docs/BEHAVIORAL.md) — Strategy, Observer, Command
 
-## Интеграция
+## Примеры использования отдельных паттернов
 
-Модули готовы к использованию в основном приложении. Для интеграции в проект `Monolith` или `Microservice`:
+Каждый паттерн в папке `patterns/` можно использовать отдельно:
 
 ```python
-# В вашем коде
-from patterns.behavioral import Strategy, Sorter, BubbleSort
+# Singleton
+from patterns.creational import Singleton
+config = Singleton(value=42)
+
+# Factory
+from patterns.creational import AnimalFactory
+dog = AnimalFactory.create('dog')
+
+# Builder
+from patterns.creational import CarBuilder
+car = CarBuilder().add_engine('V8').add_wheels(4).build()
+
+# Strategy
+from patterns.behavioral import Sorter, PythonSort
+sorter = Sorter(PythonSort())
+result = sorter.perform([3, 1, 2])
+
+# Observer
+from patterns.behavioral import Subject, PrintObserver
+subject = Subject()
+subject.attach(PrintObserver())
+subject.notify('event')
+```
+
+## Интеграция в проекты Monolith/Microservice
+
+Все классы и функции готовы к использованию в основном приложении:
+
+```python
+from patterns.creational import Singleton
+from patterns.behavioral import Strategy, Sorter
+
+class AnalysisConfig(Singleton):
+    def __init__(self):
+        self.quality = 'high'
+        self.format = 'GeoTIFF'
 
 class CustomStrategy(Strategy):
     def sort(self, data):
         return sorted(data, reverse=True)
 
+config = AnalysisConfig()
 sorter = Sorter(CustomStrategy())
-result = sorter.perform([3, 1, 2])
 ```
 
 ## Разработка
 
-Все модули следуют соглашениям:
+Все компоненты следуют стандартам:
 
-- Используют `logging` вместо `print` для вывода.
-- Каждый модуль предоставляет функцию `run()` для проверки работоспособности.
-- `__init__.py` файлы каждой категории экспортируют публичные классы и функции.
-- Каждый паттерн сопровождается unit-тестами.
+- Используют `logging` для вывода
+- Имеют type hints и docstrings
+- Покрыты unit-тестами
+- Экспортируют публичные интерфейсы через `__init__.py`
+
+## Лицензия
+
+MIT
