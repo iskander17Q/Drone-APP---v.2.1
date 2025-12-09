@@ -8,13 +8,6 @@
 
 ---
 
-## Структура
-
-```
-Monolith/        # REST API и Celery-задачи в одном сервисе
-Microservice/    # gateway, imagery, analysis, report + воркеры
-OLD/             # исходный desktop и алгоритмы расчётов
-```
 
 ---
 
