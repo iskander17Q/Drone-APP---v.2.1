@@ -357,46 +357,98 @@ class AnalysisWindow(QtWidgets.QWidget):
             return
         
         try:
-            # Загружаем изображение и считаем индексы
-            image = load_image(self.current_image_path)
-            indices = compute_indices(image)
-            
-            # Используем один из индексов для отображения тепловой карты
-            index_map = indices.get("NDVI_emp")
-            if index_map is None:
-                index_map = list(indices.values())[0]
-            
-            # Генерируем тепловую карту (в папке assets)
-            os.makedirs("assets", exist_ok=True)
-            heatmap_filename = os.path.join("assets", "heatmap_temp.png")
-            generate_heatmap(index_map, heatmap_filename)
-            self.current_heatmap_path = heatmap_filename
-            
-            # Отображаем тепловую карту в label
-            pixmap = QtGui.QPixmap(heatmap_filename)
-            if not pixmap.isNull():
-                if (pixmap.width() > self.label_heatmap.width() or 
-                    pixmap.height() > self.label_heatmap.height()):
-                    pixmap = pixmap.scaled(self.label_heatmap.size(),
-                                           QtCore.Qt.KeepAspectRatio,
-                                           QtCore.Qt.SmoothTransformation)
-                self.label_heatmap.setPixmap(pixmap)
-            else:
-                self.label_heatmap.setText("Не удалось отобразить тепловую карту.")
-            
-            # Классифицируем состояние поля
-            stats, conclusion = classify_index(index_map)
-            self.current_stats = stats  # сохраняем, если нужно
-            
-            # Формируем текст отчёта
-            report_text = "Распределение состояния растений:\n"
-            for category, pct in stats.items():
-                report_text += f"{category}: {pct:.1f}%\n"
-            report_text += "\nВывод: " + conclusion
-            self.text_report.setText(report_text)
-            
-            # Активируем кнопку сохранения PDF
-            self.btn_save.setEnabled(True)
+            # Попытка использовать Facade/Strategy/Observer из реестра паттернов.
+            try:
+                registry = globals().get('__patterns_registry__')
+                if registry and registry.get('facade'):
+                    # Facade выполнит загрузку, сбор индексов и экспорт тепловой карты.
+                    facade = registry['facade']
+                    res = facade.run_full_analysis(self.current_image_path, export_folder='assets')
+                    indices = res.get('indices', {})
+                    heatmap_filename = res.get('heatmap')
+                    self.current_heatmap_path = heatmap_filename
+                else:
+                    # Резервный путь: стандартный код (MVP)
+                    image = load_image(self.current_image_path)
+                    indices = compute_indices(image)
+                    index_map = indices.get("NDVI_emp")
+                    if index_map is None:
+                        index_map = list(indices.values())[0]
+                    os.makedirs("assets", exist_ok=True)
+                    heatmap_filename = os.path.join("assets", "heatmap_temp.png")
+                    generate_heatmap(index_map, heatmap_filename)
+                    self.current_heatmap_path = heatmap_filename
+
+                # Отображаем тепловую карту
+                if self.current_heatmap_path:
+                    pixmap = QtGui.QPixmap(self.current_heatmap_path)
+                    if not pixmap.isNull():
+                        if (pixmap.width() > self.label_heatmap.width() or 
+                            pixmap.height() > self.label_heatmap.height()):
+                            pixmap = pixmap.scaled(self.label_heatmap.size(),
+                                                   QtCore.Qt.KeepAspectRatio,
+                                                   QtCore.Qt.SmoothTransformation)
+                        self.label_heatmap.setPixmap(pixmap)
+                    else:
+                        self.label_heatmap.setText("Не удалось отобразить тепловую карту.")
+
+                # Классификация: используем стратегию, если есть
+                if registry and registry.get('strategy_threshold'):
+                    strat = registry['strategy_threshold']
+                    stats = strat.classify(list(indices.values())[0])
+                else:
+                    # fallback к существующей функции classify_index
+                    index_map = indices.get("NDVI_emp") or list(indices.values())[0]
+                    stats, conclusion = classify_index(index_map)
+
+                self.current_stats = stats
+
+                # Формируем текст отчёта
+                report_text = "Распределение состояния растений:\n"
+                for category, pct in stats.items():
+                    report_text += f"{category}: {pct:.1f}%\n"
+                # Если есть заключение — добавить
+                if 'conclusion' in locals():
+                    report_text += "\nВывод: " + conclusion
+                self.text_report.setText(report_text)
+
+                # Нотификация наблюдателям (если есть)
+                try:
+                    if registry and registry.get('on_analysis_done'):
+                        registry['on_analysis_done'].notify(self.current_stats, self.current_heatmap_path)
+                except Exception:
+                    pass
+
+                # Активируем кнопку сохранения PDF
+                self.btn_save.setEnabled(True)
+
+            except Exception:
+                # Если что-то пошло не так в интеграции — откатываемся к MVP-пути
+                image = load_image(self.current_image_path)
+                indices = compute_indices(image)
+                index_map = indices.get("NDVI_emp")
+                if index_map is None:
+                    index_map = list(indices.values())[0]
+                os.makedirs("assets", exist_ok=True)
+                heatmap_filename = os.path.join("assets", "heatmap_temp.png")
+                generate_heatmap(index_map, heatmap_filename)
+                self.current_heatmap_path = heatmap_filename
+                pixmap = QtGui.QPixmap(heatmap_filename)
+                if not pixmap.isNull():
+                    if (pixmap.width() > self.label_heatmap.width() or 
+                        pixmap.height() > self.label_heatmap.height()):
+                        pixmap = pixmap.scaled(self.label_heatmap.size(),
+                                               QtCore.Qt.KeepAspectRatio,
+                                               QtCore.Qt.SmoothTransformation)
+                    self.label_heatmap.setPixmap(pixmap)
+                stats, conclusion = classify_index(index_map)
+                self.current_stats = stats
+                report_text = "Распределение состояния растений:\n"
+                for category, pct in stats.items():
+                    report_text += f"{category}: {pct:.1f}%\n"
+                report_text += "\nВывод: " + conclusion
+                self.text_report.setText(report_text)
+                self.btn_save.setEnabled(True)
             
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Ошибка", f"Ошибка при анализе: {str(e)}")
@@ -420,14 +472,29 @@ class AnalysisWindow(QtWidgets.QWidget):
         )
         if pdf_path:
             try:
-                generate_pdf_report(
-                    pdf_path,
-                    self.current_image_path,
-                    self.current_heatmap_path,
-                    self.text_report.toPlainText(),
-                    self.current_gps,
-                    index_type="NDVI_emp"
-                )
+                # Попытка использовать Command для сохранения отчёта
+                registry = globals().get('__patterns_registry__')
+                if registry and registry.get('commands') and registry['commands'].get('SaveReportCommand'):
+                    SaveReport = registry['commands']['SaveReportCommand']
+                    cmd = SaveReport(
+                        generate_pdf_report,
+                        pdf_path,
+                        self.current_image_path,
+                        self.current_heatmap_path,
+                        self.text_report.toPlainText(),
+                        self.current_gps,
+                    )
+                    cmd.execute()
+                else:
+                    # Fallback: стандартная генерация PDF (MVP)
+                    generate_pdf_report(
+                        pdf_path,
+                        self.current_image_path,
+                        self.current_heatmap_path,
+                        self.text_report.toPlainText(),
+                        self.current_gps,
+                        index_type="NDVI_emp"
+                    )
                 # Экспорт спектральных карт в подпапку рядом с PDF
                 import os
                 from image_processing import load_image, compute_indices, generate_heatmap
